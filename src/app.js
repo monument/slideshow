@@ -28,11 +28,11 @@ function Slide({job}) {
 function Controls({onNext, onPrevious, canGoNext, canGoBack, isPaused, play}) {
   return (
     <Flex flexDirection='row' position='absolute' top='0' width='100vw' height='100vh' alignItems='stretch'>
-      <Flex flexDirection='row' justifyContent='flex-start' alignItems='center' flex='1' props={{onClick: () => canGoBack && onPrevious()}}>
-        <Button disabled={!canGoBack} onClick={() => canGoBack && onPrevious()}>Previous</Button>
+      <Flex flexDirection='row' justifyContent='flex-start' alignItems='center' flex='1' props={{onClick: ev => canGoBack && onPrevious(ev)}}>
+        <Button disabled={!canGoBack} onClick={ev => canGoBack && onPrevious(ev)}>Previous</Button>
       </Flex>
-      <Flex flexDirection='row' justifyContent='flex-end' alignItems='center' flex='1' props={{onClick: () => canGoNext && onNext()}}>
-        <Button disabled={!canGoNext} onClick={() => canGoNext && onNext()}>Next</Button>
+      <Flex flexDirection='row' justifyContent='flex-end' alignItems='center' flex='1' props={{onClick: ev => canGoNext && onNext(ev)}}>
+        <Button disabled={!canGoNext} onClick={ev => canGoNext && onNext(ev)}>Next</Button>
       </Flex>
       {isPaused ? <Button style={{position: 'absolute', bottom: '0', left: '0', right: '0'}} onClick={play}>Play</Button> : null}
     </Flex>
@@ -69,7 +69,8 @@ class App extends Component {
     this.setState({stack: [job, ..._.take(this.state.stack, this.state.maxSize - 1)], loading: false, index: 0})
   }
 
-  onNextSlide = () => {
+  onNextSlide = (ev) => {
+    ev.stopPropagation()
     this.pause()
     if (this.state.index - 1 >= 0) {
       this.setState({index: this.state.index - 1})
@@ -78,7 +79,8 @@ class App extends Component {
     this.getNewSlide()
   }
 
-  onPreviousSlide = () => {
+  onPreviousSlide = (ev) => {
+    ev.stopPropagation()
     this.pause()
     this.setState({index: this.state.index + 1})
   }
