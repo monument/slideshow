@@ -1,7 +1,6 @@
 import React, { Component } from 'react'
 import _ from 'lodash'
 import {Block, Flex} from 'jsxstyle'
-import './App.css'
 
 const Button = (props) => <button type='button' {...props} style={{border: 'solid 1px white', backgroundColor: 'white', fontSize: '16px', ...props.style}} />
 
@@ -12,14 +11,16 @@ const combos = [
   {type: 'jpg', density: '2x'},
 ]
 
+const SERVER = process.env.SERVER || 'http://localhost:3005'
+
 function Slide({job}) {
   let {id} = job
   let srcSet = combos.map(({type, density}) => {
-    return `http://localhost:3005/completed/${id}/featured?type=${type}&density=${density}&width=1500 ${density}`
+    return `${SERVER}/completed/${id}/featured?type=${type}&density=${density}&width=1500 ${density}`
   }).join(', ')
   return (
     <Block>
-      <img src={`http://localhost:3005/completed/${id}/featured`} srcSet={srcSet} role='presentation' />
+      <img style={{maxWidth: '100%', maxHeight: '100vh'}} src={`${SERVER}/completed/${id}/featured`} srcSet={srcSet} role='presentation' />
     </Block>
   )
 }
@@ -45,35 +46,41 @@ class App extends Component {
     index: 0,
     maxSize: 10,
     paused: false,
+    interval: 5000,
+    intervalId: 0,
   }
 
   componentWillMount() {
     this.getNewSlide()
+    this.start()
+  }
+
+  start = () => {
+    this.setState({paused: false, intervalId: setInterval(this.getNewSlide, this.state.interval)})
   }
 
   getRandomJob = async () => {
-    return fetch('http://localhost:3005/shuffle').then(r => r.json()).then(arr => arr[0])
+    return fetch(`${SERVER}/shuffle`).then(r => r.json()).then(arr => arr[0])
   }
 
   getNewSlide = async () => {
     this.setState({loading: true})
     let job = await this.getRandomJob()
-    this.setState((state) => {
-      return {...state, stack: [job, ..._.take(state.stack, state.maxSize - 1)], loading: false, index: 0}
-    })
+    this.setState({stack: [job, ..._.take(this.state.stack, this.state.maxSize - 1)], loading: false, index: 0})
   }
 
   onNextSlide = () => {
-    this.setState({paused: true})
+    this.pause()
     if (this.state.index - 1 >= 0) {
-      this.setState(state => ({...state, index: state.index - 1}))
+      this.setState({index: this.state.index - 1})
       return
     }
     this.getNewSlide()
   }
 
   onPreviousSlide = () => {
-    this.setState(state => ({...state, index: state.index + 1, paused: true}))
+    this.pause()
+    this.setState({index: this.state.index + 1})
   }
 
   canGoBack = () => {
@@ -81,11 +88,12 @@ class App extends Component {
   }
 
   pause = () => {
+    clearInterval(this.state.intervalId)
     this.setState({paused: true})
   }
 
   play = () => {
-    this.setState({paused: false})
+    this.start()
   }
 
   render() {
