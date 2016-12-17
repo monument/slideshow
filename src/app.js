@@ -46,7 +46,7 @@ class App extends Component {
     index: 0,
     maxSize: 10,
     paused: false,
-    interval: 5000,
+    interval: 15000,
     intervalId: 0,
   }
 
